@@ -1,65 +1,41 @@
 import streamlit as st
-from datetime import datetime, timedelta
-import pandas as pd
-import io
-import math
+import random
 
-st.title("📚 시험 공부 계획 자동 생성기")
+st.title("💖 이상형 동물상 진단기")
 
-# 1. 시험 날짜 입력
-exam_date = st.date_input("시험 날짜를 선택하세요", min_value=datetime.today().date() + timedelta(days=1))
+st.write("""
+좋아하는 사람이나 연예인의 사진을 5장 이상 업로드해주세요.  
+사진을 분석해 당신의 이상형 동물상을 추천해드립니다!
+""")
 
-# 2. 쉬는 요일 선택
-rest_days = st.multiselect(
-    "쉬는 요일을 선택하세요 (예: 토요일, 일요일은 공부 안 함)",
-    options=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-    default=["Saturday", "Sunday"]
+uploaded_files = st.file_uploader(
+    "최소 5장 이상의 이미지를 업로드하세요",
+    type=["png", "jpg", "jpeg"],
+    accept_multiple_files=True
 )
 
-# 3. 공부할 항목 입력
-tasks_input = st.text_area("공부할 내용을 줄마다 입력하세요 (예: 챕터 1, 챕터 2, ...)", height=200)
+animal_types = {
+    "강아지상": "친근하고 따뜻하며 충성심이 강한 유형",
+    "고양이상": "독립적이고 신비로운 매력을 가진 유형",
+    "사자상": "리더십 있고 당당하며 용감한 유형",
+    "여우상": "교활하면서도 매혹적인 유형",
+    "토끼상": "순수하고 귀여우며 상냥한 유형",
+    "부엉이상": "지혜롭고 신중한 유형"
+}
 
-# 4. 버튼 클릭 시 계획 생성
-if st.button("공부 계획 생성하기"):
-    tasks = [task.strip() for task in tasks_input.strip().split("\n") if task.strip()]
-
-    if not tasks:
-        st.warning("공부할 내용을 최소 1개 이상 입력해 주세요.")
+if uploaded_files:
+    if len(uploaded_files) < 5:
+        st.warning("최소 5장 이상의 이미지를 업로드해주세요!")
     else:
-        today = datetime.today().date()
-        days_range = pd.date_range(start=today, end=exam_date - timedelta(days=1))
+        st.success(f"{len(uploaded_files)}장의 사진이 업로드 되었습니다.")
 
-        # 쉬는 날 제외한 날짜 목록
-        study_days = [day.date() for day in days_range if day.strftime("%A") not in rest_days]
+        # (실제로는 이미지 분석하는 코드 필요, 여기선 랜덤 추천으로 대체)
+        result = random.choice(list(animal_types.items()))
 
-        if len(study_days) == 0:
-            st.warning("쉬는 날을 제외하면 공부할 수 있는 날이 없습니다.")
-        else:
-            # 항목을 균등하게 나누기
-            tasks_per_day = math.ceil(len(tasks) / len(study_days))
-            plan = []
+        st.subheader(f"🦄 당신의 이상형 동물상은 **{result[0]}** 입니다!")
+        st.write(result[1])
 
-            # 날짜별로 일정 수의 과제를 분배
-            for i, day in enumerate(study_days):
-                start_idx = i * tasks_per_day
-                end_idx = start_idx + tasks_per_day
-                if start_idx >= len(tasks):
-                    break
-                daily_tasks = tasks[start_idx:end_idx]
-                plan.append((day, day.strftime("%A"), " / ".join(daily_tasks)))
-
-            # DataFrame 생성 및 출력
-            plan_df = pd.DataFrame(plan, columns=["날짜", "요일", "공부할 내용"]).sort_values("날짜")
-
-            st.success("📆 아래는 자동 생성된 공부 계획입니다:")
-            st.dataframe(plan_df, use_container_width=True)
-
-            # CSV 다운로드
-            csv_buffer = io.StringIO()
-            plan_df.to_csv(csv_buffer, index=False, encoding='utf-8-sig')
-            st.download_button(
-                label="📥 계획 다운로드 (CSV)",
-                data=csv_buffer.getvalue(),
-                file_name="study_plan.csv",
-                mime="text/csv"
-            )
+        st.write("---")
+        st.write("업로드된 이미지 미리보기:")
+        for img_file in uploaded_files:
+            st.image(img_file, width=150)
