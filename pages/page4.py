@@ -1,70 +1,73 @@
 import streamlit as st
-import random
+from datetime import datetime
 
-st.title("🎨 취향 저격 배경화면 추천기")
+st.title("✨ 당신의 별자리와 그날 우주 이야기")
 
-# 1. 스타일 선택
-style = st.selectbox(
-    "좋아하는 배경화면 스타일을 선택하세요",
-    ["자연", "도시", "미니멀", "추상", "우주", "동물", "기타"]
-)
+# 생년월일 입력
+birth_date = st.date_input("생년월일을 선택하세요")
 
-# 2. 색상 톤 선택
-color_tone = st.radio(
-    "선호하는 색상 톤은?",
-    ["밝음", "어둠", "컬러풀", "모노크롬"]
-)
-
-# 3. 이미지 데이터베이스 (예시)
-image_db = {
-    "자연": {
-        "밝음": [
-            "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=60",
-            "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=800&q=60"
-        ],
-        "어둠": [
-            "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=800&q=60"
-        ],
-        "컬러풀": [
-            "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=800&q=60"
-        ],
-        "모노크롬": [
-            "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=60"
-        ]
-    },
-    "도시": {
-        "밝음": [
-            "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=800&q=60"
-        ],
-        "어둠": [
-            "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=800&q=60"
-        ],
-        "컬러풀": [
-            "https://images.unsplash.com/photo-1520975922981-0aa9333c48e6?auto=format&fit=crop&w=800&q=60"
-        ],
-        "모노크롬": [
-            "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=800&q=60"
-        ]
-    },
-    # ... 다른 스타일도 유사하게 추가 가능
+# 별자리 심볼 이미지 URL 딕셔너리 (무료 공개 이미지나 Unsplash, Wikimedia 등 사용 가능)
+zodiac_images = {
+    "물병자리 ♒️": "https://upload.wikimedia.org/wikipedia/commons/5/53/Aquarius.svg",
+    "물고기자리 ♓️": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Pisces.svg",
+    "양자리 ♈️": "https://upload.wikimedia.org/wikipedia/commons/5/5a/Aries.svg",
+    "황소자리 ♉️": "https://upload.wikimedia.org/wikipedia/commons/3/32/Taurus.svg",
+    "쌍둥이자리 ♊️": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Gemini.svg",
+    "게자리 ♋️": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Cancer.svg",
+    "사자자리 ♌️": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Leo.svg",
+    "처녀자리 ♍️": "https://upload.wikimedia.org/wikipedia/commons/6/68/Virgo.svg",
+    "천칭자리 ♎️": "https://upload.wikimedia.org/wikipedia/commons/3/38/Libra.svg",
+    "전갈자리 ♏️": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Scorpio.svg",
+    "사수자리 ♐️": "https://upload.wikimedia.org/wikipedia/commons/6/68/Sagittarius.svg",
+    "염소자리 ♑️": "https://upload.wikimedia.org/wikipedia/commons/3/30/Capricorn.svg",
 }
 
-if st.button("추천 받기"):
-    if style in image_db and color_tone in image_db[style]:
-        imgs = image_db[style][color_tone]
-        chosen_img = random.choice(imgs)
-        st.image(chosen_img, caption=f"{style} 스타일 / {color_tone} 톤", use_column_width=True)
+def get_zodiac_sign(day, month):
+    zodiac_dates = [
+        ((1, 20), (2, 18), "물병자리 ♒️"),
+        ((2, 19), (3, 20), "물고기자리 ♓️"),
+        ((3, 21), (4, 19), "양자리 ♈️"),
+        ((4, 20), (5, 20), "황소자리 ♉️"),
+        ((5, 21), (6, 20), "쌍둥이자리 ♊️"),
+        ((6, 21), (7, 22), "게자리 ♋️"),
+        ((7, 23), (8, 22), "사자자리 ♌️"),
+        ((8, 23), (9, 22), "처녀자리 ♍️"),
+        ((9, 23), (10, 22), "천칭자리 ♎️"),
+        ((10, 23), (11, 21), "전갈자리 ♏️"),
+        ((11, 22), (12, 21), "사수자리 ♐️"),
+        ((12, 22), (12, 31), "염소자리 ♑️"),
+        ((1, 1), (1, 19), "염소자리 ♑️")
+    ]
+    for start, end, sign in zodiac_dates:
+        start_month, start_day = start
+        end_month, end_day = end
+        if (month == start_month and day >= start_day) or (month == end_month and day <= end_day):
+            return sign
+    return "별자리 정보 없음"
 
-        if st.button("이미지 다운로드"):
-            import urllib.request
-            from io import BytesIO
-            import base64
+def get_universe_story(date):
+    year = date.year
+    events = {
+        2023: "2023년, 우주에서는 거대한 목성 대적반의 색 변화가 관찰되었습니다.",
+        2022: "2022년, 토성의 고리가 밝게 보이는 시기였습니다.",
+        2021: "2021년, 화성 대접근으로 붉은 행성이 매우 선명히 보였죠.",
+        2020: "2020년, 금성의 매우 밝은 모습이 밤하늘을 빛냈습니다."
+    }
+    return events.get(year, f"{year}년, 우주는 평소처럼 신비롭고 광활했습니다.")
 
-            with urllib.request.urlopen(chosen_img) as response:
-                img_bytes = response.read()
+if birth_date:
+    day = birth_date.day
+    month = birth_date.month
+    sign = get_zodiac_sign(day, month)
+    st.subheader(f"당신의 별자리는: {sign}")
 
-            b64 = base64.b64encode(img_bytes).decode()
-            href = f'<a href="data:file/jpg;base64,{b64}" download="background.jpg">⬇️ 이미지 다운로드</a>'
-            st.markdown(href, unsafe_allow_html=True)
+    # 별자리 이미지 보여주기
+    img_url = zodiac_images.get(sign)
+    if img_url:
+        st.image(img_url, width=200)
     else:
-        st.warning("선택한 스타일과 색상 톤에 맞는 이미지가 없습니다.")
+        st.write("별자리 이미지가 없습니다.")
+
+    universe_story = get_universe_story(birth_date)
+    st.write(f"📅 {birth_date}의 우주 이야기:")
+    st.write(universe_story)
