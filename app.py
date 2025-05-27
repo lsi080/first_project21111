@@ -2,6 +2,7 @@ import streamlit as st
 from datetime import datetime, timedelta
 import pandas as pd
 import io
+import math
 
 st.title("📚 시험 공부 계획 자동 생성기")
 
@@ -27,26 +28,33 @@ if st.button("공부 계획 생성하기"):
     else:
         today = datetime.today().date()
         days_range = pd.date_range(start=today, end=exam_date - timedelta(days=1))
-        
+
         # 쉬는 날 제외한 날짜 목록
         study_days = [day.date() for day in days_range if day.strftime("%A") not in rest_days]
 
         if len(study_days) == 0:
             st.warning("쉬는 날을 제외하면 공부할 수 있는 날이 없습니다.")
         else:
-            # 공부 항목을 날짜에 균등하게 배분
+            # 항목을 균등하게 나누기
+            tasks_per_day = math.ceil(len(tasks) / len(study_days))
             plan = []
-            for i, task in enumerate(tasks):
-                study_date = study_days[i % len(study_days)]
-                plan.append((study_date, study_date.strftime('%A'), task))
 
-            # DataFrame 생성 및 정렬
+            # 날짜별로 일정 수의 과제를 분배
+            for i, day in enumerate(study_days):
+                start_idx = i * tasks_per_day
+                end_idx = start_idx + tasks_per_day
+                if start_idx >= len(tasks):
+                    break
+                daily_tasks = tasks[start_idx:end_idx]
+                plan.append((day, day.strftime("%A"), " / ".join(daily_tasks)))
+
+            # DataFrame 생성 및 출력
             plan_df = pd.DataFrame(plan, columns=["날짜", "요일", "공부할 내용"]).sort_values("날짜")
 
             st.success("📆 아래는 자동 생성된 공부 계획입니다:")
             st.dataframe(plan_df, use_container_width=True)
 
-            # CSV 다운로드 버튼
+            # CSV 다운로드
             csv_buffer = io.StringIO()
             plan_df.to_csv(csv_buffer, index=False, encoding='utf-8-sig')
             st.download_button(
