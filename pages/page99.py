@@ -1,60 +1,29 @@
-# Streamlit과 hashlib 라이브러리 불러오기
+# solar_energy.py
 import streamlit as st
-import hashlib
 
-# 시저 암호 암호화 함수
-def caesar_encrypt(text, shift):
-    encrypted = ""  # 암호문 저장 변수
-    for char in text:
-        if char.isalpha():  # 알파벳인 경우만 암호화
-            offset = 65 if char.isupper() else 97  # 대소문자 구분
-            # 아스키 코드를 이용해 시프트 연산 (A~Z or a~z 사이에서 순환)
-            encrypted += chr((ord(char) - offset + shift) % 26 + offset)
+def app():
+    st.title("🔆 스마트 홈 – 태양광 발전량 예측")
+
+    st.markdown("""
+    설치된 태양광 패널의 발전량을 계산하고, 에너지 소비 대비 자가 발전 비율을 확인할 수 있습니다.
+    """)
+
+    panel_area = st.number_input("태양광 패널 설치 면적 (㎡)", min_value=0.0, step=0.5)
+    efficiency = st.slider("패널 효율 (%)", min_value=10, max_value=25, value=18)
+    sunlight_hours = st.slider("일일 평균 일조 시간 (시간)", 0.0, 12.0, 4.5, 0.5)
+    household_consumption = st.number_input("가정의 하루 전력 소비량 (kWh)", min_value=0.0, value=10.0)
+
+    if panel_area > 0 and sunlight_hours > 0:
+        generation_kwh = panel_area * (efficiency / 100) * sunlight_hours
+        self_supply_ratio = (generation_kwh / household_consumption) * 100 if household_consumption else 0
+
+        st.subheader("예상 태양광 발전량")
+        st.write(f"일일 발전량: **{generation_kwh:.2f} kWh**")
+        st.write(f"자가 발전 비율: **{self_supply_ratio:.1f}%**")
+
+        if self_supply_ratio >= 80:
+            st.success("대부분의 전기를 자가 발전으로 충당할 수 있습니다!")
+        elif self_supply_ratio >= 40:
+            st.info("전기의 일부를 자가 발전으로 커버하고 있습니다.")
         else:
-            # 알파벳이 아니면 그대로 추가 (공백, 숫자, 기호 등)
-            encrypted += char
-    return encrypted
-
-# 시저 암호 복호화 함수 (시프트 값을 음수로 줘서 암호 해제)
-def caesar_decrypt(text, shift):
-    return caesar_encrypt(text, -shift)
-
-# SHA256 해시 함수 (복호화 불가능한 단방향 암호)
-def sha256_hash(text):
-    return hashlib.sha256(text.encode()).hexdigest()
-
-# Streamlit 웹앱 제목 및 설명
-st.title("🔐 암호화 체험 웹앱")
-st.write("고전암호(시저)와 현대 해시(SHA256)를 직접 입력해보고 비교해보세요!")
-
-# 사용자로부터 입력 받을 평문 텍스트
-input_text = st.text_input("암호화할 텍스트를 입력하세요:")
-
-# 암호화 방식 선택 (시저 암호 또는 SHA256 해시)
-method = st.selectbox("암호화 방식 선택", ["시저 암호", "SHA256 해시"])
-
-# 시저 암호 선택 시
-if method == "시저 암호":
-    # 시프트 값 슬라이더로 입력 (1~25)
-    shift = st.slider("시프트 값 선택 (1~25)", 1, 25, 3)
-    
-    # 암호화 및 복호화 수행
-    encrypted_text = caesar_encrypt(input_text, shift)
-    decrypted_text = caesar_decrypt(encrypted_text, shift)
-
-    # 결과 출력
-    st.subheader("🔐 암호문:")
-    st.code(encrypted_text)
-
-    st.subheader("🔓 복호화 결과:")
-    st.code(decrypted_text)
-
-# SHA256 해시 선택 시
-elif method == "SHA256 해시":
-    # 해시 처리
-    hashed_text = sha256_hash(input_text)
-
-    # 결과 출력 (복호화 불가능)
-    st.subheader("🔐 해시 결과 (복호화 불가능):")
-    st.code(hashed_text)
-    st.info("SHA256은 단방향 해시 함수이므로 복호화할 수 없습니다.")
+            st.warning("자가 발전량이 부족합니다. 에너지 절약을 병행하세요.")
